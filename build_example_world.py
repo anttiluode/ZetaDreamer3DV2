@@ -10,7 +10,7 @@ import argparse
 from pathlib import Path
 import torch
 
-from zeta_dreamer_3d import ZetaDreamerNet
+from zeta_neural_core import ZetaDreamerNet
 from zeta_volume_export import export_world
 
 def main():

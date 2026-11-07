@@ -1,0 +1,28 @@
+name: Build playable Zeta V2 world
+on:
+  push:
+    paths:
+      - 'zeta_neural_core.py'
+      - 'build_example_world.py'
+      - '.github/workflows/build-example.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  world:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install CPU torch and NumPy
+        run: python -m pip install numpy torch --index-url https://download.pytorch.org/whl/cpu
+      - name: Evaluate the original trained example and build 64 cubed V2 HTML
+        run: python build_example_world.py --size 64 --t0 26.8 --t1 28.4 --output zeta_v2_example.html
+      - uses: actions/upload-artifact@v4
+        with:
+          name: zeta-v2-complex-field-playable-html
+          path: zeta_v2_example.html
+          if-no-files-found: error
