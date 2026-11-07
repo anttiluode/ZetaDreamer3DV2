@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><title>ZETA V2 | PHASE OBSERVATORY | __WORLD_TITLE__</title>
+<style>
+:root{--bg:#080b13;--panel:#101a2ae8;--line:#33465d;--text:#eaf5ff;--sub:#94aabd;--gold:#ffc36f;--cyan:#7be8e4;--purple:#cfabfb}
+*{box-sizing:border-box}body{margin:0;overflow:hidden;background:var(--bg);color:var(--text);font:13px system-ui,Segoe UI,sans-serif}canvas{width:100vw;height:100vh;display:block;outline:none}#rmsChart{width:100%;height:90px;display:block;background:#07121e;border:1px solid #344966;border-radius:8px}
+#ui{position:fixed;left:18px;top:17px;bottom:15px;display:flex;flex-direction:column;gap:11px;max-width:min(325px,calc(100vw - 40px));overflow-y:scroll;overflow-x:hidden;padding-right:5px;scrollbar-width:auto;scrollbar-color:#647f9d #152236;pointer-events:auto;z-index:5;overscroll-behavior:contain}#ui>*{pointer-events:auto;flex-shrink:0}#ui::-webkit-scrollbar{width:12px}#ui::-webkit-scrollbar-thumb{background:#647f9d;border-radius:8px;border:2px solid #152236}
+.panel{border:1px solid var(--line);border-radius:14px;background:var(--panel);backdrop-filter:blur(14px);box-shadow:0 15px 65px #0006;padding:15px}
+h1{margin:0 0 6px;font:850 21px system-ui;letter-spacing:-.035em}h1 span{color:var(--cyan)}.tag{font:10px ui-monospace,Consolas,monospace;letter-spacing:.15em;color:var(--gold);margin-bottom:8px}.hint{font:11px/1.6 ui-monospace,Consolas,monospace;color:var(--sub)}.hint strong{color:var(--cyan)}
+button,select{font:inherit;background:#192b42;color:var(--text);border:1px solid #4b6282;border-radius:8px;padding:8px 10px;cursor:pointer}button:hover,select:hover{border-color:var(--cyan)}button.active{background:#14514a;border-color:var(--cyan)}button.primary{background:linear-gradient(115deg,#ffc36f,#ff9484);color:#19110b;font-weight:800;border:0}button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid #7be8e4;outline-offset:3px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.grid>*{min-width:0}.grid .wide{grid-column:1/-1}.input-row{margin:13px 0 5px}.input-row label{display:flex;justify-content:space-between;gap:7px;margin-bottom:6px;font-size:11px;color:#bdccda}.input-row b{font:11px ui-monospace,Consolas,monospace;color:var(--gold)}input[type=range]{width:100%;accent-color:var(--cyan)}.info{display:grid;grid-template-columns:1fr auto;gap:6px;margin-top:13px;color:var(--sub);font:11px ui-monospace,Consolas,monospace}.info strong{color:var(--text);font-weight:500}.dot{width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--cyan);margin-right:7px}
+#modeTitle{font-weight:750;color:var(--gold)}#status{color:var(--cyan)}#right{position:fixed;right:17px;bottom:17px;background:#101a2adf;border:1px solid #405771;border-radius:12px;padding:12px 15px;pointer-events:none;text-align:right;line-height:1.8;font:11px ui-monospace,Consolas,monospace;color:#c2d8e8}#right strong{color:var(--gold)}#center{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);font:18px ui-monospace,Consolas,monospace;color:#ffdea177;pointer-events:none;text-shadow:0 0 9px #f3bd6a}#notice{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#152338;border:1px solid #64809d;border-radius:12px;padding:14px 22px;min-width:200px;max-width:70vw;text-align:center;display:none;z-index:4}#hideUi{position:fixed;top:17px;right:17px;z-index:2}
+@media(max-width:700px){#ui{left:9px;top:10px;max-width:min(285px,calc(100vw - 20px));bottom:8px}.panel{padding:11px}#right{right:9px;bottom:9px;max-width:140px;font-size:9px}#hideUi{right:9px;top:9px}h1{font-size:18px}}
+</style></head>
+<body>
+<canvas id="view" tabindex="0" aria-label="Three dimensional dream volume. Click to capture mouse; use WASD to fly."></canvas>
+<button id="hideUi" type="button">HIDE UI (H)</button>
+<div id="ui">
+ <div class="panel"><div class="tag">ZETA DREAMER V2 / COMPLEX FIELD LAB</div><h1>Enter <span>the phase observatory.</span></h1><div class="hint">This is a real sample of the trained neural field in coordinates <strong>(x, y, t)</strong>. The images were taught at fixed t values; everything between and beyond is evaluated from that field.</div><div class="info"><span>VOLUME</span><strong>__GRID_SIZE__³ voxels</strong><span>t RANGE</span><strong>__T_START__ → __T_END__</strong><span>INPUT SLICES</span><strong>__ANCHOR_LABEL__</strong><span>PHASE WINDING</span><strong>measured on sampled plaquettes</strong></div></div>
+ <div class="panel"><div class="tag">NAVIGATION</div><div class="grid"><button class="primary" id="enter">ENTER CENTER (G)</button><button id="outside">VIEW ORB (O)</button><button id="resume">CAPTURE MOUSE</button><button id="screenshot">SAVE IMAGE (P)</button></div><p class="hint">Click the 3D view to look around. <strong>W A S D</strong> fly, <strong>R / F</strong> up/down, <strong>G</strong> enter center, <strong>Shift</strong> fast, <strong>Q / E</strong> roll-free yaw, <strong>Esc</strong> release mouse. Arrow keys turn. <strong>1–9</strong> switch modes.</p></div>
+ <div class="panel"><div class="tag">MATTER AND PHASE</div><select id="mode" style="width:100%"><option value="0">1 / HYBRID WORLD</option><option value="1">2 / DREAM GRADIENT SHEETS</option><option value="2">3 / IMAGE CLOUDS</option><option value="3">4 / COMPLEX NODAL SHEETS</option><option value="4">5 / VORTEX FILAMENTS</option><option value="5">6 / INTERFERENCE RESIDUE</option><option value="6">7 / PHASE CURRENT</option><option value="7">8 / HARMONIC CONTROL</option><option value="8">9 / LEARNED − CONTROL</option></select><p class="hint" id="modeHelp">Structures from image gradients, real/imaginary nodal sheets and candidate phase winding cells.</p>
+   <div class="input-row"><label>Surface threshold (modes 1–3) <b id="cutV">0.30</b></label><input id="cut" type="range" min="0.0" max="0.8" value="0.30" step="0.01"></div>
+   <div class="input-row"><label>Density / glow <b id="densityV">1.55</b></label><input id="density" type="range" min="0.15" max="7" value="1.55" step="0.05"></div>
+   <div class="input-row"><label>Volume resolution <b id="scaleV">80%</b></label><input id="scale" type="range" min="35" max="100" value="80" step="5"></div>
+   <div class="input-row"><label>Ray steps <b id="stepsV">176</b></label><input id="steps" type="range" min="64" max="256" value="176" step="16"></div>
+   <div class="input-row"><label>Complex channel <b id="channelV">RED</b></label><select id="channel"><option value="0">Red complex field</option><option value="1">Green complex field</option><option value="2">Blue complex field</option></select></div>
+   <div class="input-row"><label>True filament width <b id="lineWidthV">1.4 px</b></label><input id="lineWidth" type="range" min="0.65" max="5" value="1.4" step="0.15"></div><label style="font-size:12px;color:var(--sub)"><input type="checkbox" id="rim" checked> Show spherical boundary</label>
+ </div>
+ <div class="panel"><div class="tag">RELATIONAL OPERATOR / MODE 6</div>
+  <div class="input-row"><label>Partner B (A = selected channel)</label><select id="partner" style="width:100%"><option value="0">Red complex output</option><option value="1" selected>Green complex output</option><option value="2">Blue complex output</option></select></div>
+  <div class="input-row"><label>Relative phase θ <b id="phaseV">0°</b></label><input id="phase" type="range" min="-180" max="180" step="1" value="0"></div>
+  <div class="input-row"><label>B time displacement (fraction of slab) <b id="lagV">0.000</b></label><input id="lag" type="range" min="-.4" max=".4" step=".005" value="0"></div>
+  <div class="input-row"><label>Partner gain <b id="gainV">1.00</b></label><input id="gain" type="range" min=".1" max="3" step=".05" value="1"></div>
+  <p class="hint">Cyan = positive and magenta = negative <strong>2 Re(e<sup>iθ</sup> A*B)</strong>. Dark regions may reflect weak amplitude, orthogonal relative phase, or cancellation.</p>
+ </div>
+ <div class="panel"><div class="tag">MATHEMATICAL CONTROL / MODES 8–9</div>
+  <p class="hint">The harmonic control solves Laplace's equation between the first and last <strong>sampled complex</strong> t-planes. These are not necessarily the original training images.</p>
+  <canvas id="rmsChart" width="260" height="90" aria-label="Relative RMS complex mismatch by t"></canvas>
+  <div class="info"><span>LOCAL RMS DIFFERENCE</span><strong id="rmsLocal">—</strong><span>PRECISION</span><strong id="rmsPrecision">—</strong></div>
+  <p class="hint">RMS(Z−H)/RMS(Z) measures departure from the defined control, not prediction error or epistemic uncertainty.</p>
+ </div>
+ <div class="panel"><div class="tag">WHAT YOU ARE SEEING</div><div class="hint">The RGB cloud comes from the model's original output. The nodal surfaces are places where <strong>Re(Z)=0</strong> or <strong>Im(Z)=0</strong>. Filament mode renders thin sub-voxel line segments defined by simultaneous Re(Z)=Im(Z)=0. These are extracted from a piecewise-linear approximation of the trained field, not blurred occupied voxels.<p style="margin-bottom:0">A feature near a Riemann zero is not automatically caused by that zero. The red markers are references only.</p></div></div>
+</div>
+<div id="right"><div><span class="dot" id="runningDot"></span><span id="status">READY</span></div><div>POSITION: <strong id="xyz">0.00, 0.00, 0.00</strong></div><div>SLICE t: <strong id="timeT">0.00</strong></div><div id="region">TRAINING / EXTRAPOLATION</div><div id="nearZero"></div><div style="color:#6c819b">Scroll the left panel normally • wheel over the 3D view adjusts speed</div></div>
+<div id="center">+</div><div id="notice" role="status"></div>
+<script>
+'use strict';
+const EMBEDDED = __EMBEDDED_DATA__;
+const S = EMBEDDED.size;
+const canvas = document.getElementById('view');
+const $ = id => document.getElementById(id);
+const gl = canvas.getContext('webgl2',{antialias:false,alpha:false,powerPreference:'high-performance',preserveDrawingBuffer:true});
+const modes = [
+ 'Structures from gradients, nodal sheets and candidate phase-winding cells.',
+ 'Edges where the decoded RGB field changes through the 3D volume.',
+ 'Translucent RGB intensity, showing the evolving learned images.',
+ 'Blue surfaces: Re(Z)=0. Purple surfaces: Im(Z)=0. Their intersections can produce phase vortices.',
+ 'Thin, RGB-channel-colored lines reconstructed by finding Re(Z)=Im(Z)=0 between grid points.',
+ 'Signed interference of channel A and phase-rotated/time-shifted complex channel B.',
+ 'Phase current J = Im(conj(Z) grad Z), with absolute x/y/t components mapped to RGB.',
+ 'Harmonic control: a known Laplace-equation solution from two sampled complex planes.',
+ 'Complex mismatch Z − harmonic control: a picture of the learned extension’s freedom.'
+];
+const decode = b64 => {const binary=atob(b64), out=new Uint8Array(binary.length);for(let i=0;i<binary.length;i++)out[i]=binary.charCodeAt(i);return out;};
+const VERT=`#version 300 es
+void main(){vec2 p=vec2((gl_VertexID << 1)&2,gl_VertexID&2);gl_Position=vec4(2.0*p-1.0,0.0,1.0);}`;
+const FRAG=`#version 300 es
+precision highp float;precision highp sampler3D;precision highp int;
+uniform vec2 uResolution;
+uniform sampler3D uRGB,uComplex0,uComplex1,uHarm0,uHarm1;
+uniform vec3 uCamera;
+uniform mat3 uBasis;
+uniform float uCut,uDensity,uTime,uPhase,uLag,uGain;
+uniform int uMode,uChannel,uSteps,uRim,uPartner;
+out vec4 frag;
+vec3 hsv(float h,float s,float v){vec3 c=clamp(abs(mod(h*6.0+vec3(0.,4.,2.),6.)-3.)-1.,0.,1.);return v*mix(vec3(1.),c,s);}
+float hash(vec3 x){x=fract(x*0.1031);x+=dot(x,x.yzx+33.33);return fract((x.x+x.y)*x.z);}
+vec2 getZ(vec4 c0,vec4 c1,int ch){if(ch==0)return 2.0*c0.rg-1.0;if(ch==1)return 2.0*c0.ba-1.0;return 2.0*c1.rg-1.0;}
+vec2 sampleZ(vec3 p,int ch){vec3 uv=clamp(p,vec3(.001),vec3(.999));return getZ(texture(uComplex0,uv),texture(uComplex1,uv),ch);}
+vec2 sampleH(vec3 p,int ch){vec3 uv=clamp(p,vec3(.001),vec3(.999));return getZ(texture(uHarm0,uv),texture(uHarm1,uv),ch);}
+void main(){
+ vec2 coord=(gl_FragCoord.xy-.5*uResolution)/uResolution.y;
+ vec3 rd=normalize(uBasis*vec3(coord*1.35,1.0));
+ vec3 ro=uCamera;
+ float b=dot(ro,rd),c=dot(ro,ro)-1.0,h=b*b-c;
+ vec3 bg=mix(vec3(.003,.008,.02),vec3(.008,.02,.046),.5+.5*rd.y);
+ float stars=step(.9986,hash(floor(rd*720.)))*(.35+.65*hash(floor(rd*115.)));
+ bg+=vec3(.5,.7,1.)*stars;
+ if(h<0.0){frag=vec4(pow(bg,vec3(.83)),1.);return;}
+ float root=sqrt(h),entry=max(0.0,-b-root),finish=-b+root;
+ if(finish<0.0){frag=vec4(bg,1.);return;}
+ float span=finish-entry;
+ int steps=max(1,min(uSteps,256));
+ float dt=span/float(steps);
+ vec3 color=vec3(0.);float trans=1.0;
+ for(int i=0;i<256;i++){
+  if(i>=steps||trans<.012)break;
+  float t=entry+(float(i)+.45)*dt;
+  vec3 pos=ro+rd*t;
+  vec3 uv=clamp(pos*.5+.5,vec3(.001),vec3(.999));
+  vec4 rgb=texture(uRGB,uv);
+  vec4 z0=texture(uComplex0,uv);
+  vec4 z1=texture(uComplex1,uv);
+  float edges=rgb.a;
+  vec2 z=getZ(z0,z1,uChannel);
+  float zeroR=exp(-pow(z.x/.034,2.));
+  float zeroI=exp(-pow(z.y/.034,2.));
+  float lum=dot(rgb.rgb,vec3(.23,.66,.11));
+  float dens=0.;vec3 pigment=rgb.rgb;
+  if(uMode==0){dens=max(0.,edges-uCut)*3.3+.025*lum+.18*zeroR*zeroI;
+   pigment=rgb.rgb*1.08+vec3(.13,.27,.34);}
+  else if(uMode==1){dens=max(0.,edges-uCut)*3.0;pigment=rgb.rgb*.85+vec3(.12,.30,.48);}
+  else if(uMode==2){dens=max(0.,lum-uCut)*.85;pigment=rgb.rgb+.06;}
+  else if(uMode==3){dens=.38*zeroR+.38*zeroI+.18*zeroR*zeroI;
+   pigment=(vec3(.16,.9,1.)*zeroR+vec3(.86,.32,1.)*zeroI)/(zeroR+zeroI+.001);}
+  else if(uMode==5){
+    vec2 bz=uGain*sampleZ(uv+vec3(0.,0.,uLag),uPartner);
+    vec2 rot=vec2(cos(uPhase)*bz.x-sin(uPhase)*bz.y,sin(uPhase)*bz.x+cos(uPhase)*bz.y);
+    float crossTerm=2.*dot(z,rot);
+    float coherence=dot(z,rot)/(length(z)*length(rot)+.012);
+    dens=abs(crossTerm)*smoothstep(.12,.60,abs(coherence))*.80;
+    pigment=(crossTerm>=0.)?vec3(.13,.95,1.25):vec3(1.05,.28,.85);
+   }
+   else if(uMode==6){
+    float d=1.0/float(__GRID_SIZE__);
+    vec2 xp=sampleZ(uv+vec3(d,0.,0.),uChannel),xm=sampleZ(uv-vec3(d,0.,0.),uChannel);
+    vec2 yp=sampleZ(uv+vec3(0.,d,0.),uChannel),ym=sampleZ(uv-vec3(0.,d,0.),uChannel);
+    vec2 zp=sampleZ(uv+vec3(0.,0.,d),uChannel),zm=sampleZ(uv-vec3(0.,0.,d),uChannel);
+    vec3 j=vec3(z.x*(xp.y-xm.y)-z.y*(xp.x-xm.x),
+                 z.x*(yp.y-ym.y)-z.y*(yp.x-ym.x),
+                 z.x*(zp.y-zm.y)-z.y*(zp.x-zm.x))/(2.*d);
+    float amp=length(z);
+    dens=min(2.5,.22*length(j)/(amp*amp+.16))*smoothstep(.07,.24,amp);
+    pigment=.18+2.0*abs(j)/(length(j)+.01);
+   }
+   else if(uMode==7){
+    vec3 v=vec3(length(sampleH(uv,0)),length(sampleH(uv,1)),length(sampleH(uv,2)));
+    dens=max(0.,dot(v,vec3(.23,.66,.11))-.52*uCut)*1.35;
+    pigment=v*1.5+vec3(.04,.13,.18);
+   }
+   else if(uMode==8){
+    vec3 e=vec3(length(sampleZ(uv,0)-sampleH(uv,0)),
+                length(sampleZ(uv,1)-sampleH(uv,1)),
+                length(sampleZ(uv,2)-sampleH(uv,2)));
+    dens=max(0.,length(e)-uCut*.36)*1.5;
+    pigment=vec3(.10,.15,.23)+e*1.65;
+   }
+   else {dens=0.;pigment=vec3(0.);}
+  if((uMode==0||uMode==1||uMode==3)&&dens>.003){
+   vec3 d=vec3(1.0/float(__GRID_SIZE__));
+   vec3 grad=vec3(
+     texture(uRGB,uv+vec3(d.x,0.,0.)).a-texture(uRGB,uv-vec3(d.x,0.,0.)).a,
+     texture(uRGB,uv+vec3(0.,d.y,0.)).a-texture(uRGB,uv-vec3(0.,d.y,0.)).a,
+     texture(uRGB,uv+vec3(0.,0.,d.z)).a-texture(uRGB,uv-vec3(0.,0.,d.z)).a);
+   vec3 normal=normalize(grad+vec3(.00001));
+   vec3 light=normalize(vec3(.38,.73,-.57));
+   float diffuse=max(dot(normal,light),0.);
+   float fresnel=pow(1.-abs(dot(normal,rd)),3.);
+   float specular=pow(max(dot(reflect(rd,normal),light),0.),38.);
+   pigment=pigment*(.35+.70*diffuse)+vec3(.14,.55,.73)*fresnel*.70+vec3(.85,.9,1.)*specular*1.15;
+  }
+  float alpha=1.-exp(-dens*uDensity*dt*4.4);
+  alpha=clamp(alpha,0.,.45);
+  float shimmer=1.0+.17*sin(uTime*.5+pos.z*14.+pos.x*17.);
+  color+=trans*alpha*max(vec3(0.),pigment)*shimmer;
+  trans*=1.-alpha;
+ }
+ if(uRim==1){
+  vec3 hit=ro+rd*(dot(ro,ro)<1.0?finish:max(0.,-b-root));
+  vec3 n=normalize(hit);
+  float fres=pow(1.0-abs(dot(n,rd)),3.0);
+  float rings=1.-smoothstep(.018,.055,abs(sin(atan(n.x,n.z)*12.0)));
+  float lat=1.-smoothstep(.018,.055,abs(sin(asin(clamp(n.y,-1.,1.))*10.0)));
+  vec3 edge=vec3(.13,.41,.49)*(.18+.64*fres)+vec3(.12,.22,.27)*max(rings,lat)*.15;
+  color+=trans*edge;
+ }
+ color+=trans*bg;
+ color=color/(vec3(1.)+color);
+ frag=vec4(pow(max(color,vec3(0.)),vec3(.76)),1.);
+}`;
+const LINE_VERT="#version 300 es\nprecision highp float;\nlayout(location=0) in vec3 aStart;\nlayout(location=1) in vec3 aFinish;\nlayout(location=2) in vec2 aMeta;\nuniform vec2 uResolution;\nuniform vec3 uCamera;\nuniform mat3 uBasis;\nuniform float uWidth;\nout vec3 vColor;\nout float vFade;\nout float vSide;\nvoid main(){\n  vec3 a=aStart*2.0-1.0, b=aFinish*2.0-1.0;\n  vec3 midpoint=(a+b)*.5;\n  vec3 right=uBasis[0],up=uBasis[1],forward=uBasis[2];\n  vec3 pc=vec3(dot(a-uCamera,right),dot(a-uCamera,up),dot(a-uCamera,forward));\n  vec3 qc=vec3(dot(b-uCamera,right),dot(b-uCamera,up),dot(b-uCamera,forward));\n  if((pc.z<.04&&qc.z<.04)||dot(midpoint,midpoint)>1.04){\n    gl_Position=vec4(3.,3.,0.,1.);vColor=vec3(0.);vFade=0.;vSide=0.;return;\n  }\n  // Clip line endpoints to the camera near plane.\n  if(pc.z<.04)pc=mix(pc,qc,clamp((.04-pc.z)/(qc.z-pc.z),0.,1.));\n  if(qc.z<.04)qc=mix(qc,pc,clamp((.04-qc.z)/(pc.z-qc.z),0.,1.));\n  vec2 A=2.*vec2(pc.x*uResolution.y/uResolution.x,pc.y)/(pc.z*1.35);\n  vec2 B=2.*vec2(qc.x*uResolution.y/uResolution.x,qc.y)/(qc.z*1.35);\n  vec2 delta=(B-A)*uResolution;\n  float d=length(delta);\n  if(d<.04){gl_Position=vec4(3.,3.,0.,1.);vColor=vec3(0.);vFade=0.;vSide=0.;return;}\n  vec2 norm=vec2(-delta.y,delta.x)/d;\n  int id=gl_VertexID%6;\n  float along=(id==2||id==3||id==5)?1.:0.;\n  float side=(id==1||id==4||id==5)?1.:-1.;\n  vec2 pixelOffset=2.*norm*side*uWidth/uResolution;\n  gl_Position=vec4(mix(A,B,along)+pixelOffset,0.,1.);\n  float channel=aMeta.x;\n  vColor=(channel<.25)?vec3(.15,.96,1.):((channel<.75)?vec3(.92,.38,1.):vec3(1.,.68,.24));\n  vFade=clamp(1.7/(1.+.24*(pc.z+qc.z)),.18,1.);\n  vSide=side;\n}";
+const LINE_FRAG="#version 300 es\nprecision highp float;\nin vec3 vColor;\nin float vFade;\nin float vSide;\nuniform float uOpacity;\nout vec4 frag;\nvoid main(){\n  float smoothCore=exp(-2.0*vSide*vSide);\n  frag=vec4(vColor*(.75+.25*vFade),clamp(uOpacity*smoothCore*vFade,0.,1.));\n}";
+function shader(type,src){const sh=gl.createShader(type);gl.shaderSource(sh,src);gl.compileShader(sh);if(!gl.getShaderParameter(sh,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(sh));return sh;}
+function program(){const p=gl.createProgram();gl.attachShader(p,shader(gl.VERTEX_SHADER,VERT));gl.attachShader(p,shader(gl.FRAGMENT_SHADER,FRAG));gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(p));return p;}
+function filamentProgram(){
+ const lineProgram=gl.createProgram();
+ gl.attachShader(lineProgram,shader(gl.VERTEX_SHADER,LINE_VERT));
+ gl.attachShader(lineProgram,shader(gl.FRAGMENT_SHADER,LINE_FRAG));
+ gl.linkProgram(lineProgram);
+ if(!gl.getProgramParameter(lineProgram,gl.LINK_STATUS))throw Error('Filament shader: '+gl.getProgramInfoLog(lineProgram));
+ return lineProgram;
+}
+function setupFilaments(){
+ if(!EMBEDDED.segments)return;
+ let bytes=decode(EMBEDDED.segments);
+ if(bytes.byteLength%16!==0)throw Error('Invalid filament segment buffer');
+ lineCount=bytes.byteLength/16;
+ if(!lineCount)return;
+ // Uniformly decimate voxel-ordered segments to bound overdraw.
+ const limit=170000;
+ if(lineCount>limit){
+  const subset=new Uint8Array(limit*16);
+  for(let i=0;i<limit;i++){const k=Math.floor((i+.5)*lineCount/limit)*16;subset.set(bytes.subarray(k,k+16),i*16);}
+  bytes=subset;lineCount=limit;
+ }
+ lineVao=gl.createVertexArray();
+ gl.bindVertexArray(lineVao);
+ const buf=gl.createBuffer();
+ gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+ gl.bufferData(gl.ARRAY_BUFFER,bytes,gl.STATIC_DRAW);
+ for(let i=0;i<3;i++){
+  gl.enableVertexAttribArray(i);
+  gl.vertexAttribPointer(i,i===2?2:3,gl.UNSIGNED_SHORT,true,16,i===0?0:i===1?6:12);
+  gl.vertexAttribDivisor(i,1);
+ }
+ gl.bindVertexArray(null);
+}
+function tex3d(i,b64){const data=decode(b64);if(data.length!==S*S*S*4)throw Error('Corrupt volume '+i+': '+data.length);const tx=gl.createTexture();gl.activeTexture(gl.TEXTURE0+i);gl.bindTexture(gl.TEXTURE_3D,tx);gl.texParameteri(gl.TEXTURE_3D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_3D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_3D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_3D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_3D,gl.TEXTURE_WRAP_R,gl.CLAMP_TO_EDGE);gl.pixelStorei(gl.UNPACK_ALIGNMENT,1);gl.texImage3D(gl.TEXTURE_3D,0,gl.RGBA8,S,S,S,0,gl.RGBA,gl.UNSIGNED_BYTE,data);return tx;}
+let p,loc,ready=false,quadVao,lineProgramObject,lineLoc,lineVao=null,lineCount=0;
+const state={pos:[0,0,-.33],yaw:0,pitch:0,move:1.0,mode:0,cut:.30,density:1.55,scale:.80,steps:176,lineWidth:1.4,channel:0,partner:1,phase:0,lag:0,gain:1,rim:true};
+const keys=new Set();let last=performance.now(),frame=0;
+function init(){
+ if(!gl)throw Error('WebGL2 unavailable: use recent Edge/Chrome and enable hardware acceleration.');
+ p=program();gl.useProgram(p);loc={};for(const n of ['uResolution','uRGB','uComplex0','uComplex1','uHarm0','uHarm1','uCamera','uBasis','uCut','uDensity','uTime','uPhase','uLag','uGain','uMode','uChannel','uPartner','uSteps','uRim'])loc[n]=gl.getUniformLocation(p,n);
+ tex3d(0,EMBEDDED.rgb);tex3d(1,EMBEDDED.c0);tex3d(2,EMBEDDED.c1);
+ tex3d(3,EMBEDDED.harm0);tex3d(4,EMBEDDED.harm1);
+ for(let i=0;i<5;i++)gl.uniform1i(loc[['uRGB','uComplex0','uComplex1','uHarm0','uHarm1'][i]],i);
+ quadVao=gl.createVertexArray();gl.bindVertexArray(quadVao);
+  lineProgramObject=filamentProgram();
+  gl.useProgram(lineProgramObject);lineLoc={};
+  for(const n of ['uResolution','uCamera','uBasis','uWidth','uOpacity'])lineLoc[n]=gl.getUniformLocation(lineProgramObject,n);
+  setupFilaments();
+  gl.useProgram(p);gl.bindVertexArray(quadVao);
+ ready=true;$('rmsPrecision').textContent=EMBEDDED.harmonic_quantized_input?'8-bit recovered':'fresh neural sample';drawCurve();$('status').textContent='COMPLEX FIELD READY · '+lineCount.toLocaleString()+' SEGMENTS';$('runningDot').style.background='#7be8e4';
+}
+function notify(msg){const el=$('notice');el.textContent=msg;el.style.display='block';setTimeout(()=>el.style.display='none',4500);}
+function drawCurve(){
+ const cv=$('rmsChart'),ctx=cv.getContext('2d');
+ const arr=EMBEDDED.harmonic_rms_curve||[];if(!ctx||!arr.length)return;
+ const w=cv.width,h=cv.height,m=12;
+ ctx.clearRect(0,0,w,h);
+ const top=Math.max(.08,...arr);
+ ctx.strokeStyle='#284459';ctx.lineWidth=1;
+ for(let j=0;j<4;j++){const y=m+(h-2*m)*j/3;ctx.beginPath();ctx.moveTo(m,y);ctx.lineTo(w-m,y);ctx.stroke();}
+ ctx.strokeStyle='#7be8e4';ctx.lineWidth=2;ctx.beginPath();
+ arr.forEach((v,i)=>{const x=m+(w-2*m)*i/(arr.length-1),y=h-m-(h-2*m)*v/top;
+   if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+ });ctx.stroke();
+ const pos=Math.max(0,Math.min(1,(state.pos[2]+1)/2)),x=m+pos*(w-2*m);
+ ctx.strokeStyle='#ffbe78';ctx.beginPath();ctx.moveTo(x,m);ctx.lineTo(x,h-m);ctx.stroke();
+ const idx=Math.min(arr.length-1,Math.round(pos*(arr.length-1)));
+ $('rmsLocal').textContent=arr[idx].toFixed(3)+' relative RMS';
+}
+const vec3=(x,y,z)=>[x,y,z];
+function render(now){requestAnimationFrame(render);if(!ready)return;
+ let dt=Math.min(.05,(now-last)/1000);last=now;
+ let forwards=[Math.sin(state.yaw)*Math.cos(state.pitch),Math.sin(state.pitch),Math.cos(state.yaw)*Math.cos(state.pitch)];
+ let right=[Math.cos(state.yaw),0,-Math.sin(state.yaw)];
+ let up=[-Math.sin(state.yaw)*Math.sin(state.pitch),Math.cos(state.pitch),-Math.cos(state.yaw)*Math.sin(state.pitch)];
+ let delta=[0,0,0];
+ const move=(v,k)=>{for(let j=0;j<3;j++)delta[j]+=v[j]*k;};
+ if(keys.has('KeyW'))move(forwards,1);if(keys.has('KeyS'))move(forwards,-1);
+ if(keys.has('KeyA'))move(right,-1);if(keys.has('KeyD'))move(right,1);
+ if(keys.has('KeyR'))move(up,1);if(keys.has('KeyF'))move(up,-1);
+ if(keys.has('ArrowUp'))state.pitch=Math.min(1.52,state.pitch+dt);if(keys.has('ArrowDown'))state.pitch=Math.max(-1.52,state.pitch-dt);
+ if(keys.has('ArrowLeft')||keys.has('KeyQ'))state.yaw-=dt;
+ if(keys.has('ArrowRight')||keys.has('KeyE'))state.yaw+=dt;
+ const speed=state.move*(keys.has('ShiftLeft')||keys.has('ShiftRight')?3.5:1);
+ const dl=Math.hypot(...delta);if(dl>0)for(let k=0;k<3;k++)state.pos[k]=Math.max(-2.6,Math.min(2.6,state.pos[k]+delta[k]/dl*speed*dt));
+ if(frame++%10===0){drawCurve();const z=(state.pos[2]+1)/2;const t=EMBEDDED.t0+z*(EMBEDDED.t1-EMBEDDED.t0);$('xyz').textContent=state.pos.map(x=>x.toFixed(2)).join(', ');$('timeT').textContent=t.toFixed(3);const anchor=EMBEDDED.anchors;const min=Math.min(...anchor),max=Math.max(...anchor);$('region').textContent=t>=min&&t<=max?'WITHIN IMAGE ANCHORS':'EXTRAPOLATED REGION';const nearest=EMBEDDED.zeros.reduce((prev,v)=>Math.abs(v-t)<Math.abs(prev-t)?v:prev,999);$('nearZero').textContent=nearest!==999&&Math.abs(nearest-t)<1.5?'near zeta zero '+nearest.toFixed(3)+' (marker only)':'';}
+ const W=Math.max(160,Math.floor(innerWidth*state.scale)),H=Math.max(100,Math.floor(innerHeight*state.scale));if(canvas.width!==W||canvas.height!==H){canvas.width=W;canvas.height=H;gl.viewport(0,0,W,H);}
+ gl.useProgram(p);gl.uniform2f(loc.uResolution,W,H);gl.uniform3fv(loc.uCamera,state.pos);gl.uniformMatrix3fv(loc.uBasis,false,new Float32Array([...right,...up,...forwards]));gl.uniform1f(loc.uTime,now/1000);gl.uniform1f(loc.uCut,state.cut);gl.uniform1f(loc.uDensity,state.density);gl.uniform1i(loc.uMode,state.mode);gl.uniform1i(loc.uChannel,state.channel);gl.uniform1i(loc.uPartner,state.partner);gl.uniform1f(loc.uPhase,state.phase*Math.PI/180);gl.uniform1f(loc.uLag,state.lag);gl.uniform1f(loc.uGain,state.gain);gl.uniform1i(loc.uSteps,state.steps);gl.uniform1i(loc.uRim,state.rim?1:0);gl.bindVertexArray(quadVao);gl.drawArrays(gl.TRIANGLES,0,3);
+  if(lineCount&&(state.mode===0||state.mode===4)){
+   gl.useProgram(lineProgramObject);gl.bindVertexArray(lineVao);
+   gl.uniform2f(lineLoc.uResolution,W,H);
+   gl.uniform3fv(lineLoc.uCamera,state.pos);
+   gl.uniformMatrix3fv(lineLoc.uBasis,false,new Float32Array([...right,...up,...forwards]));
+   gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE);
+   gl.uniform1f(lineLoc.uWidth,state.lineWidth*2.5);
+   gl.uniform1f(lineLoc.uOpacity,.075);
+   gl.drawArraysInstanced(gl.TRIANGLES,0,6,lineCount);
+   gl.uniform1f(lineLoc.uWidth,state.lineWidth*.52);
+   gl.uniform1f(lineLoc.uOpacity,.42);
+   gl.drawArraysInstanced(gl.TRIANGLES,0,6,lineCount);
+   gl.disable(gl.BLEND);gl.bindVertexArray(quadVao);
+  }
+}
+function linkSlider(id,key,format){const el=$(id),label=$(id+'V');el.addEventListener('input',()=>{state[key]=Number(el.value)*({scale:.01}[key]||1);label.textContent=format(state[key]);});}
+function setup(){
+ linkSlider('phase','phase',v=>Math.round(v)+'°');
+ linkSlider('lag','lag',v=>v.toFixed(3));
+ linkSlider('gain','gain',v=>v.toFixed(2));
+ $('partner').addEventListener('change',e=>state.partner=Number(e.target.value));
+ linkSlider('cut','cut',v=>v.toFixed(2));linkSlider('density','density',v=>v.toFixed(2));linkSlider('scale','scale',v=>Math.round(v*100)+'%');linkSlider('steps','steps',v=>v);linkSlider('lineWidth','lineWidth',v=>v.toFixed(1)+' px');
+ $('channel').addEventListener('change',e=>{state.channel=Number(e.target.value);$('channelV').textContent=['RED','GREEN','BLUE'][state.channel];});
+ $('rim').addEventListener('change',e=>state.rim=e.target.checked);
+ const setMode=i=>{state.mode=i;$('mode').value=String(i);$('modeHelp').textContent=modes[i];};
+ $('mode').addEventListener('change',e=>setMode(Number(e.target.value)));
+ function center(){state.pos=[0,0,-.33];state.yaw=0;state.pitch=0;notify('Inside the trained complex field. Walk forward with W.');}
+ function outside(){state.pos=[0,.1,-2.35];state.yaw=0;state.pitch=0;notify('Orb view. Hold W to enter the sphere.');}
+ $('enter').onclick=center;$('outside').onclick=outside;$('resume').onclick=()=>canvas.requestPointerLock?.();
+ $('screenshot').onclick=()=>{const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='zeta-dreamer3d.png';a.click();};
+ canvas.onclick=()=>canvas.requestPointerLock?.();
+ document.addEventListener('mousemove',e=>{if(document.pointerLockElement!==canvas)return;state.yaw+=e.movementX*.0023;state.pitch=Math.max(-1.52,Math.min(1.52,state.pitch-e.movementY*.0023));});
+ document.addEventListener('keydown',e=>{
+  if(['INPUT','SELECT','BUTTON'].includes(document.activeElement?.tagName))return;
+  keys.add(e.code);
+  if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();
+  if(e.code.match(/^Digit[1-9]$/))setMode(Number(e.code.slice(-1))-1);
+  if(e.code==='KeyH')toggleUi();
+  if(e.code==='KeyP')$('screenshot').click();
+  if(e.code==='KeyO')outside();
+  if(e.code==='KeyG'&&!e.repeat)center();
+ });
+ document.addEventListener('keyup',e=>keys.delete(e.code));
+ window.addEventListener('blur',()=>keys.clear());
+ canvas.addEventListener('wheel',e=>{e.preventDefault();state.move=Math.max(.1,Math.min(3.5,state.move*(e.deltaY>0?.9:1.1)));}, {passive:false});
+ $('hideUi').onclick=toggleUi;
+}
+function toggleUi(){const hidden=$('ui').style.display==='none';$('ui').style.display=hidden?'flex':'none';$('hideUi').textContent=hidden?'HIDE UI (H)':'SHOW UI (H)';}
+setup();try{init();requestAnimationFrame(render);}catch(e){console.error(e);$('status').textContent='ERROR: '+e.message;notify(e.message);}
+</script></body></html>
