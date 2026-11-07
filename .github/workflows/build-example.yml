@@ -18,7 +18,9 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install CPU torch and NumPy
-        run: python -m pip install numpy torch --index-url https://download.pytorch.org/whl/cpu
+        run: |
+          python -m pip install numpy
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
       - name: Evaluate the original trained example and build 64 cubed V2 HTML
         run: python build_example_world.py --size 64 --t0 26.8 --t1 28.4 --output zeta_v2_example.html
       - uses: actions/upload-artifact@v4
